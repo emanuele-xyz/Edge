@@ -1,7 +1,6 @@
 <Solution>
   <Configurations>
     <Platform Name="x64" />
-    <Platform Name="x86" />
   </Configurations>
-  <Project Path="Edge/Edge.vcxproj" />
+  <Project Path="Edge/Edge.vcxproj" Id="762c3740-a2db-4454-afed-ec36ae7c87c0" />
 </Solution>
