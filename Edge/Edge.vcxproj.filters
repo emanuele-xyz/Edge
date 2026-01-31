@@ -21,9 +21,15 @@
     <ClCompile Include="src\PCH.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Edge\PCH.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Edge\Logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
