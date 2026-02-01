@@ -1,6 +1,8 @@
 #include <Edge\PCH.h>
+#include <Edge\Win32.h>
 #include <Edge\Crashes.h>
 #include <Edge\Logger.h>
+#include <Edge\Window.h>
 
 namespace Edge
 {
@@ -18,7 +20,14 @@ namespace Edge
 		logger.Critical("Formatted Critical from Edge! {}", true);
 
 		//Edge_Assert(false);
-		Edge_Unreachable();
+		//Edge_Unreachable();
+
+		Window window{"Edge", 1280, 720}; // TODO: hardcoded window dimensions and title
+
+		while (!window.ShouldClose())
+		{
+			window.Update();
+		}
 	}
 }
 

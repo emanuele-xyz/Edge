@@ -41,7 +41,7 @@ namespace Edge
 			}
 			catch (...)
 			{
-				// If logging failed, do nothing
+				// if logging failed, do nothing
 			}
 		}
 		template<typename... Args>

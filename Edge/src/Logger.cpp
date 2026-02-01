@@ -8,10 +8,10 @@ namespace Edge
 {
 	Logger::Logger() noexcept
 	{
-		// Set spdlog pattern
+		// set spdlog pattern
 		spdlog::set_pattern("[%Y-%m-%d %H:%M:%S] [%^%l%$] %v");
 
-		// Log also debug level messages for debug builds
+		// log also debug level messages for debug builds
 		#if defined(_DEBUG)
 		spdlog::set_level(spdlog::level::debug);
 		#endif
@@ -31,7 +31,7 @@ namespace Edge
 		}
 		catch (...)
 		{
-			// If logging failed, do nothing
+			// if logging failed, do nothing
 		}
 	}
 }

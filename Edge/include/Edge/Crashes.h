@@ -7,7 +7,8 @@
 
 #define Edge_Crash(msg) throw ::Edge::Crash{__FILE__, __LINE__, msg}
 #define Edge_Unreachable() Edge_Crash("Unreachable code path")
-#define Edge_Assert(p) do { if (!(p)) Edge_Crash("Assertion failed: " #p ); } while (false)
+#define Edge_AssertMsg(p, msg) do { if (!(p)) Edge_Crash(msg); } while (false)
+#define Edge_Assert(p) Edge_AssertMsg(p, "Assertion failed: " #p)
 
 namespace Edge
 {
