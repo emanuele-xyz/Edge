@@ -105,6 +105,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Edge\Crashes.h" />
     <ClInclude Include="include\Edge\Logger.h" />
     <ClInclude Include="include\Edge\PCH.h" />
   </ItemGroup>

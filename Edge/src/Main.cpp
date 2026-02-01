@@ -1,11 +1,11 @@
-#include <Edge\PCH.h>                                                                                                     
-#include <Edge\Logger.h>                                                                                                     
+#include <Edge\PCH.h>
+#include <Edge\Crashes.h>
+#include <Edge\Logger.h>
 
 namespace Edge
 {
-	static void Entry()
+	static void Entry(Logger& logger)
 	{
-		Logger logger{};
 		logger.Debug("Debug from Edge!");
 		logger.Info("Info from Edge!");
 		logger.Warn("Warn from Edge!");
@@ -16,12 +16,24 @@ namespace Edge
 		logger.Warn("Formatted Warn from Edge! {}", false);
 		logger.Error("Formatted Error from Edge! {}", "wow");
 		logger.Critical("Formatted Critical from Edge! {}", true);
+
+		//Edge_Assert(false);
+		Edge_Unreachable();
 	}
 }
 
 int main()
 {
-	Edge::Entry();
+	Edge::Logger logger{};
+
+	try
+	{
+		Edge::Entry(logger);
+	}
+	catch (const Edge::Crash& crash)
+	{
+		logger.Critical("Crash: {}", crash.what());
+	}
 
 	return 0;
 }

@@ -18,7 +18,7 @@ namespace Edge
 	class Logger
 	{
 	public:
-		Logger();
+		Logger() noexcept;
 		~Logger() = default;
 		Logger(const Logger&) = delete;
 		Logger(Logger&&) noexcept = delete;

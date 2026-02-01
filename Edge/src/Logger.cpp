@@ -6,7 +6,7 @@
 
 namespace Edge
 {
-	Logger::Logger()
+	Logger::Logger() noexcept
 	{
 		// Set spdlog pattern
 		spdlog::set_pattern("[%Y-%m-%d %H:%M:%S] [%^%l%$] %v");
