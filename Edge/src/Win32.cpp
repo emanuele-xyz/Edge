@@ -1,10 +1,20 @@
 #include <Edge\PCH.h>
 #include <Edge\Win32.h>
 #include <Edge\Crashes.h>
+#include <Edge\Registry.h>
+#include <Edge\Logger.h>
 
-namespace Edge
+namespace Edge::Win32
 {
-	Win32WindowClass::Win32WindowClass(std::string_view name, WNDPROC window_procedure)
+    void WarnIfNotSuccess(HRESULT hr, const std::string_view msg)
+    {
+        if (!SUCCEEDED(hr))
+        {
+            Registry::Get<Logger>()->Warn(msg);
+        }
+    }
+
+	WindowClass::WindowClass(std::string_view name, WNDPROC window_procedure)
 		: m_name{name}
 	{
 		WNDCLASSEXA desc{};
@@ -25,12 +35,12 @@ namespace Edge
         ATOM success{ RegisterClassExA(&desc) };
         Edge_AssertMsg(success, "Failed to register Win32 window class");
 	}
-	Win32WindowClass::~Win32WindowClass()
+	WindowClass::~WindowClass()
 	{
 		UnregisterClassA(m_name.c_str(), GetModuleHandleA(NULL));
 	}
 
-    Win32Window::Win32Window(DWORD ex_style, const std::string& clazz, const std::string& name, DWORD style, int client_w, int client_h, void* param)
+    Window::Window(DWORD ex_style, const std::string& clazz, const std::string& name, DWORD style, int client_w, int client_h, void* param)
         : m_handle{}
     {
         // compute actual window dimensions from client dimensions and style
@@ -47,7 +57,7 @@ namespace Edge
         m_handle = CreateWindowExA(ex_style, clazz.c_str(), name.c_str(), style, CW_USEDEFAULT, CW_USEDEFAULT, w, h, NULL, NULL, GetModuleHandleA(NULL), param);
         Edge_AssertMsg(m_handle, "Failed to create Win32 window");
     }
-    Win32Window::~Win32Window()
+    Window::~Window()
     {
         DestroyWindow(m_handle); // NOTE: may fail
     }

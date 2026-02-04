@@ -97,6 +97,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DX12.cpp" />
+    <ClCompile Include="src\Gfx.cpp" />
+    <ClCompile Include="src\Utils.cpp" />
     <ClCompile Include="src\Window.cpp" />
     <ClCompile Include="src\Logger.cpp" />
     <ClCompile Include="src\Main.cpp" />
@@ -108,6 +111,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Edge\Crashes.h" />
+    <ClInclude Include="include\Edge\DX12.h" />
+    <ClInclude Include="include\Edge\Gfx.h" />
+    <ClInclude Include="include\Edge\Registry.h" />
+    <ClInclude Include="include\Edge\Utils.h" />
     <ClInclude Include="include\Edge\Win32.h" />
     <ClInclude Include="include\Edge\Logger.h" />
     <ClInclude Include="include\Edge\PCH.h" />

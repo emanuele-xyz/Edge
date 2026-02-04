@@ -15,6 +15,8 @@ namespace Edge
 		#if defined(_DEBUG)
 		spdlog::set_level(spdlog::level::debug);
 		#endif
+
+		// TODO: use asynchronous logging
 	}
 	void Logger::Log(LogLevel lvl, std::string_view msg) noexcept
 	{

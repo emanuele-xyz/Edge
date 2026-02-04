@@ -1,35 +1,45 @@
 #pragma once
 
+#include <Edge/Crashes.h>
+
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+
+#include <wrl/client.h>
+namespace wrl = Microsoft::WRL;
 
 #include <string>
 #include <string_view>
 
-namespace Edge
+#define EdgeWin32_AssertHRMsg(hr, msg) Edge_AssertMsg(SUCCEEDED(hr), msg)
+#define EdgeWin32_AssertHR(hr) EdgeWin32_AssertHRMsg(hr, "HRESULT is not successful: " #hr)
+
+namespace Edge::Win32
 {
-	class Win32WindowClass
+	void WarnIfNotSuccess(HRESULT hr, const std::string_view msg);
+
+	class WindowClass
 	{
 	public:
-		Win32WindowClass(std::string_view name, WNDPROC window_procedure);
-		~Win32WindowClass();
-		Win32WindowClass(const Win32WindowClass&) = delete;
-		Win32WindowClass(Win32WindowClass&&) noexcept = delete;
-		Win32WindowClass& operator=(const Win32WindowClass&) = delete;
-		Win32WindowClass& operator=(Win32WindowClass&&) noexcept = delete;
+		WindowClass(std::string_view name, WNDPROC window_procedure);
+		~WindowClass();
+		WindowClass(const WindowClass&) = delete;
+		WindowClass(WindowClass&&) noexcept = delete;
+		WindowClass& operator=(const WindowClass&) = delete;
+		WindowClass& operator=(WindowClass&&) noexcept = delete;
 	private:
 		std::string m_name;
 	};
 
-	class Win32Window
+	class Window
 	{
 	public:
-		Win32Window(DWORD ex_style, const std::string& clazz, const std::string& name, DWORD style, int client_w, int client_h, void* param);
-		~Win32Window();
-		Win32Window(const Win32Window&) = delete;
-		Win32Window(Win32Window&&) noexcept = delete;
-		Win32Window& operator=(const Win32Window&) = delete;
-		Win32Window& operator=(Win32Window&&) noexcept = delete;
+		Window(DWORD ex_style, const std::string& clazz, const std::string& name, DWORD style, int client_w, int client_h, void* param);
+		~Window();
+		Window(const Window&) = delete;
+		Window(Window&&) noexcept = delete;
+		Window& operator=(const Window&) = delete;
+		Window& operator=(Window&&) noexcept = delete;
 	private:
 		HWND m_handle;
 	};

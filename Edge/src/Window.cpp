@@ -27,8 +27,8 @@ namespace Edge
 		void Update();
 	private:
 		WindowStateFlags m_flags;
-		Win32WindowClass m_class;
-		Win32Window m_window;
+		Win32::WindowClass m_class;
+		Win32::Window m_window;
 	};
 
 	LRESULT Window::Impl::WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -94,7 +94,7 @@ namespace Edge
 	}
 	Window::~Window()
 	{
-		// do nothing
+		// do nothing (needed for PIMPL)
 	}
 	void Window::Update()
 	{

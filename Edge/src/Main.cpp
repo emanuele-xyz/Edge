@@ -1,28 +1,17 @@
 #include <Edge\PCH.h>
+#include <Edge\Registry.h>
 #include <Edge\Win32.h>
 #include <Edge\Crashes.h>
 #include <Edge\Logger.h>
 #include <Edge\Window.h>
+#include <Edge\Gfx.h>
 
 namespace Edge
 {
-	static void Entry(Logger& logger)
+	static void Entry()
 	{
-		logger.Debug("Debug from Edge!");
-		logger.Info("Info from Edge!");
-		logger.Warn("Warn from Edge!");
-		logger.Error("Error from Edge!");
-		logger.Critical("Critical from Edge!");
-		logger.Debug("Formatted Debug from Edge! {}", 0);
-		logger.Info("Formatted Info from Edge! {}", 1.1);
-		logger.Warn("Formatted Warn from Edge! {}", false);
-		logger.Error("Formatted Error from Edge! {}", "wow");
-		logger.Critical("Formatted Critical from Edge! {}", true);
-
-		//Edge_Assert(false);
-		//Edge_Unreachable();
-
 		Window window{"Edge", 1280, 720}; // TODO: hardcoded window dimensions and title
+		Gfx gfx{};
 
 		while (!window.ShouldClose())
 		{
@@ -35,9 +24,15 @@ int main()
 {
 	Edge::Logger logger{};
 
+	// add logger to registry
+	{
+		bool success{ Edge::Registry::Add(&logger) };
+		Edge_AssertMsg(success, "Failed to register logger to registry");
+	}
+
 	try
 	{
-		Edge::Entry(logger);
+		Edge::Entry();
 	}
 	catch (const Edge::Crash& crash)
 	{
