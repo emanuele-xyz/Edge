@@ -22,6 +22,7 @@ namespace Edge
 		Impl& operator=(const Impl&) = delete;
 		Impl& operator=(Impl&&) noexcept = delete;
 	public:
+		HWND Handle() const noexcept { return m_window.Handle(); }
 		const WindowStateFlags& Flags() const noexcept { return m_flags; }
 	public:
 		void Update();
@@ -99,6 +100,10 @@ namespace Edge
 	void Window::Update()
 	{
 		m_impl->Update();
+	}
+	void* Window::Handle() const noexcept
+	{
+		return m_impl->Handle();
 	}
 	bool Window::ShouldClose() const noexcept
 	{

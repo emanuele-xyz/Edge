@@ -10,8 +10,8 @@ namespace Edge
 {
 	static void Entry()
 	{
-		Window window{"Edge", 1280, 720}; // TODO: hardcoded window dimensions and title
-		Gfx gfx{};
+		Window window{ "Edge", 1280, 720 }; // TODO: hardcoded window dimensions and title
+		Gfx gfx{ window.Handle() };
 
 		while (!window.ShouldClose())
 		{

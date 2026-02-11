@@ -10,7 +10,7 @@ namespace Edge
 	class Gfx
 	{
 	public:
-		Gfx();
+		Gfx(void* hwnd);
 		~Gfx();
 		Gfx(const Gfx&) = delete;
 		Gfx(Gfx&&) noexcept = delete;

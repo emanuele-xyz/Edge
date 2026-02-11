@@ -15,6 +15,7 @@ namespace Edge
 		Window& operator=(const Window&) = delete;
 		Window& operator=(Window&&) noexcept = delete;
 	public:
+		void* Handle() const noexcept;
 		bool ShouldClose() const noexcept;
 		bool DidResize() const noexcept;
 	public:

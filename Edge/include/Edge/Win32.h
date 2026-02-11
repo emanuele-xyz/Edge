@@ -8,10 +8,12 @@
 #include <wrl/client.h>
 namespace wrl = Microsoft::WRL;
 
+#include <format>
 #include <string>
 #include <string_view>
 
 #define EdgeWin32_AssertHRMsg(hr, msg) Edge_AssertMsg(SUCCEEDED(hr), msg)
+#define EdgeWin32_AssertHRMsgFmt(hr, fmt, ...) EdgeWin32_AssertHRMsg(hr, std::format((fmt), __VA_ARGS__))
 #define EdgeWin32_AssertHR(hr) EdgeWin32_AssertHRMsg(hr, "HRESULT is not successful: " #hr)
 
 namespace Edge::Win32
@@ -40,6 +42,8 @@ namespace Edge::Win32
 		Window(Window&&) noexcept = delete;
 		Window& operator=(const Window&) = delete;
 		Window& operator=(Window&&) noexcept = delete;
+	public:
+		HWND Handle() const noexcept { return m_handle; }
 	private:
 		HWND m_handle;
 	};

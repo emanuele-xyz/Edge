@@ -12,7 +12,7 @@
 
 namespace Edge::DX12
 {
-	constexpr static const char* D3DFeatureLevelToStr(D3D_FEATURE_LEVEL lvl)
+	static const char* D3DFeatureLevelToStr(D3D_FEATURE_LEVEL lvl)
 	{
 		const char* str{};
 		switch (lvl)
@@ -29,8 +29,34 @@ namespace Edge::DX12
 		case D3D_FEATURE_LEVEL_12_0: { str = "D3D_FEATURE_LEVEL_12_0"; } break;
 		case D3D_FEATURE_LEVEL_12_1: { str = "D3D_FEATURE_LEVEL_12_1"; } break;
 		case D3D_FEATURE_LEVEL_12_2: { str = "D3D_FEATURE_LEVEL_12_2"; } break;
+		default: { Edge_Unreachable(); } break;
 		}
 		return str;
+	}
+	static const char* D3D12DescriptorTypeToStr(D3D12_DESCRIPTOR_HEAP_TYPE type)
+	{
+		const char* str{};
+		switch (type)
+		{
+		case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV: { str = "D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV"; } break;
+		case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER: { str = "D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER"; } break;
+		case D3D12_DESCRIPTOR_HEAP_TYPE_RTV: { str = "D3D12_DESCRIPTOR_HEAP_TYPE_RTV"; } break;
+		case D3D12_DESCRIPTOR_HEAP_TYPE_DSV: { str = "D3D12_DESCRIPTOR_HEAP_TYPE_DSV"; } break;
+		case D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES: { str = "D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES"; } break;
+		default: { Edge_Unreachable(); } break;
+		}
+		return str;
+	}
+
+	DescriptorHeap::DescriptorHeap(ID3D12Device14* device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT size, BOOL shader_visible)
+		: m_heap{ CreateDescriptorHeap(device, type, size, shader_visible) }
+		, m_descriptor_size{ device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) }
+	{
+	}
+	D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::At(UINT index)
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE start{ m_heap->GetCPUDescriptorHandleForHeapStart() };
+		return D3D12_CPU_DESCRIPTOR_HANDLE{ start.ptr + index * m_descriptor_size };
 	}
 
 	void EnableDXGIDebug()
@@ -97,7 +123,7 @@ namespace Edge::DX12
 		wrl::ComPtr<ID3D12Device14> device{};
 		D3D_FEATURE_LEVEL required_feature_level{ D3D_FEATURE_LEVEL_12_2 };
 		HRESULT hr{ D3D12CreateDevice(adapter, required_feature_level, IID_PPV_ARGS(device.ReleaseAndGetAddressOf())) };
-		EdgeWin32_AssertHRMsg(hr, std::format("Failed to create D3D12 device with for feature level {}", D3DFeatureLevelToStr(required_feature_level)));
+		EdgeWin32_AssertHRMsgFmt(hr, "Failed to create D3D12 device with for feature level {}", D3DFeatureLevelToStr(required_feature_level));
 		return device;
 	}
 	wrl::ComPtr<ID3D12CommandQueue> CreateD3D12CommandQueue(ID3D12Device14* device, const D3D12_COMMAND_QUEUE_DESC& desc)
@@ -134,6 +160,56 @@ namespace Edge::DX12
 		//desc.NodeMask = ;
 		return DX12::CreateD3D12CommandQueue(device, desc);
 	}
-}
+	wrl::ComPtr<IDXGISwapChain4> CreateDXGISwapChain(IDXGIFactory7* factory, ID3D12CommandQueue* direct_queue, HWND hwnd, UINT buffer_count)
+	{
+		DXGI_SWAP_CHAIN_DESC1 desc{};
+		//desc.Width = 0;
+		//desc.Height = 0;
+		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // TODO: sRGB
+		//desc.Stereo = ;
+		desc.SampleDesc = DXGI_SAMPLE_DESC{ .Count = 1, .Quality = 0 };
+		desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		desc.BufferCount = buffer_count;
+		desc.Scaling = DXGI_SCALING_NONE;
+		desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+		//desc.Flags = ;
 
-// TODO: look for asserts with std::format inside and create new macros Edge_AssertMsgFmt or something like that
+		HRESULT hr{ S_OK };
+		wrl::ComPtr<IDXGISwapChain1> swap_chain1{};
+		hr = factory->CreateSwapChainForHwnd(direct_queue, hwnd, &desc, NULL, NULL, swap_chain1.ReleaseAndGetAddressOf());
+		EdgeWin32_AssertHRMsg(hr, "Failed to create DXGI swap chain");
+		wrl::ComPtr<IDXGISwapChain4> swap_chain4{};
+		hr = swap_chain1->QueryInterface(swap_chain4.ReleaseAndGetAddressOf());
+		EdgeWin32_AssertHRMsg(hr, "Failed to query for latest DXGI swap chain interface");
+
+		// Disable Alt+Enter full screen transitions
+		hr = factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
+		Win32::WarnIfNotSuccess(hr, "Failed to disable Alt+Enter full screen transitions");
+
+		return swap_chain4;
+	}
+	wrl::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(ID3D12Device14* device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT size, BOOL shader_visible)
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC desc{};
+		desc.Type = type;
+		desc.NumDescriptors = size;
+		desc.Flags = shader_visible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		//UINT desc.NodeMask = ;
+		wrl::ComPtr<ID3D12DescriptorHeap> heap{};
+		HRESULT hr{ device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(heap.ReleaseAndGetAddressOf())) };
+		EdgeWin32_AssertHRMsgFmt(hr, "Failed to create descriptor heap - type: {} - size: {} - is_shader_visible: {}", D3D12DescriptorTypeToStr(type), size, shader_visible);
+		return heap;
+	}
+	wrl::ComPtr<ID3D12DescriptorHeap> CreateRTVHeap(ID3D12Device14* device, UINT size, BOOL shader_visible)
+	{
+		return CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, size, shader_visible);
+	}
+	wrl::ComPtr<ID3D12Resource> GetSwapChainBuffer(IDXGISwapChain4* swap_chain, UINT buffer_idx)
+	{
+		wrl::ComPtr<ID3D12Resource> res;
+		HRESULT hr{ swap_chain->GetBuffer(buffer_idx, IID_PPV_ARGS(res.ReleaseAndGetAddressOf())) };
+		EdgeWin32_AssertHRMsgFmt(hr, "Failed to get swap chain buffer {}", buffer_idx);
+		return res;
+	}
+}

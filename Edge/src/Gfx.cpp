@@ -1,5 +1,6 @@
 #include <Edge\PCH.h>
 #include <Edge\Gfx.h>
+#include <Edge\Utils.h>
 #include <Edge\DX12.h>
 #include <Edge\Utils.h>
 #include <Edge\Registry.h>
@@ -7,62 +8,64 @@
 
 namespace Edge
 {
-	class ReportDXGIAndD3DLiveCOMObjectsOnDestruct
-	{
-	public:
-		ReportDXGIAndD3DLiveCOMObjectsOnDestruct() = default;
-		~ReportDXGIAndD3DLiveCOMObjectsOnDestruct() { DX12::ReportDXGIAndD3DLiveCOMObjects(); }
-		ReportDXGIAndD3DLiveCOMObjectsOnDestruct(const ReportDXGIAndD3DLiveCOMObjectsOnDestruct&) = delete;
-		ReportDXGIAndD3DLiveCOMObjectsOnDestruct(ReportDXGIAndD3DLiveCOMObjectsOnDestruct&&) noexcept = delete;
-		ReportDXGIAndD3DLiveCOMObjectsOnDestruct& operator=(const ReportDXGIAndD3DLiveCOMObjectsOnDestruct&) = delete;
-		ReportDXGIAndD3DLiveCOMObjectsOnDestruct& operator=(ReportDXGIAndD3DLiveCOMObjectsOnDestruct&&) noexcept = delete;
-	};
-
 	class Gfx::Impl
 	{
 	public:
-		Impl();
+		Impl(void* hwnd);
 		~Impl() = default;
 		Impl(const Impl&) = delete;
 		Impl(Impl&&) noexcept = delete;
 		Impl& operator=(const Impl&) = delete;
 		Impl& operator=(Impl&&) noexcept = delete;
 	private:
+		constexpr static UINT FRAME_COUNT{ 2 };
 		#if defined(_DEBUG)
 		// Note: Must be the first member, because we want it to be destructed last.
 		// Otherwise the other members of the class will be reported as leaking.
-		ReportDXGIAndD3DLiveCOMObjectsOnDestruct m_on_destruct;
+		OnDestruct<void(void)> m_report_live_objects_on_destruct{ DX12::ReportDXGIAndD3DLiveCOMObjects };
+		OnConstruct m_enable_dxgi_debug_on_construct{ DX12::EnableDXGIDebug };
+		OnConstruct m_enable_d3d_debug_on_construct{ DX12::EnableD3D12Debug };
 		#endif
 		wrl::ComPtr<IDXGIFactory7> m_dxgi_factory;
 		wrl::ComPtr<IDXGIAdapter4> m_adapter;
-		DXGI_ADAPTER_DESC3 m_adapter_desc;
+		DXGI_ADAPTER_DESC3 m_adapter_desc{};
 		wrl::ComPtr<ID3D12Device14> m_device;
-		wrl::ComPtr<ID3D12CommandQueue> m_command_queue;
+		wrl::ComPtr<ID3D12CommandQueue> m_direct_queue;
+		wrl::ComPtr<IDXGISwapChain4> m_swap_chain;
+		DX12::DescriptorHeap m_rtv_heap_frame;
+		wrl::ComPtr<ID3D12Resource> m_rtv_frame[FRAME_COUNT];
 	};
 
-	Gfx::Impl::Impl()
+	Gfx::Impl::Impl(void* hwnd)
+		: m_dxgi_factory{ DX12::CreateDXGIFactory() }
+		, m_adapter{ DX12::GetDXGIAdapter(m_dxgi_factory.Get()) }
+		, m_device{ DX12::CreateD3D12Device(m_adapter.Get()) }
+		, m_direct_queue{ DX12::CreateD3D12DirectQueue(m_device.Get()) }
+		, m_swap_chain{ DX12::CreateDXGISwapChain(m_dxgi_factory.Get(), m_direct_queue.Get(), static_cast<HWND>(hwnd), FRAME_COUNT) }
+		, m_rtv_heap_frame{ m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FRAME_COUNT, FALSE }
+		, m_rtv_frame{}
 	{
+		// Fetch and log adapter description
 		HRESULT hr{ S_OK };
-		#if defined(_DEBUG)
-		DX12::EnableDXGIDebug();
-		DX12::EnableD3D12Debug();
-		#endif
-		m_dxgi_factory = DX12::CreateDXGIFactory();
-		m_adapter = DX12::GetDXGIAdapter(m_dxgi_factory.Get());
 		hr = m_adapter->GetDesc3(&m_adapter_desc);
 		Win32::WarnIfNotSuccess(hr, "Failed to get DXGI adapter description");
 		if (SUCCEEDED(hr))
 		{
 			Registry::Get<Logger>()->Info("Selected DXGI adapter: {}", WCharToString(m_adapter_desc.Description));
 		}
-		m_device = DX12::CreateD3D12Device(m_adapter.Get());
-		m_command_queue = DX12::CreateD3D12DirectQueue(m_device.Get());
+
+		// Create frame RTVs
+		for (UINT i{}; i < FRAME_COUNT; i++)
+		{
+			wrl::ComPtr<ID3D12Resource> buf{ DX12::GetSwapChainBuffer(m_swap_chain.Get(), i) };
+			m_device->CreateRenderTargetView(buf.Get(), nullptr, m_rtv_heap_frame.At(i));
+		}
 
 		// TODO: to be implemented
 	}
 
-	Gfx::Gfx()
-		: m_impl{ std::make_unique<Impl>() }
+	Gfx::Gfx(void* hwnd)
+		: m_impl{ std::make_unique<Impl>(hwnd) }
 	{
 	}
 	Gfx::~Gfx()
