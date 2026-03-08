@@ -43,4 +43,9 @@ namespace Edge::DX12
 	wrl::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(ID3D12Device14* device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT size, BOOL shader_visible);
 	wrl::ComPtr<ID3D12DescriptorHeap> CreateRTVHeap(ID3D12Device14* device, UINT size, BOOL shader_visible);
 	wrl::ComPtr<ID3D12Resource> GetSwapChainBuffer(IDXGISwapChain4* swap_chain, UINT buffer_idx);
+	wrl::ComPtr<ID3D12CommandAllocator> CreateCommandAllocator(ID3D12Device14* device, D3D12_COMMAND_LIST_TYPE type);
+	wrl::ComPtr<ID3D12CommandAllocator> CreateDirectCommandAllocator(ID3D12Device14* device);
+	wrl::ComPtr<ID3D12GraphicsCommandList> CreateGraphicsCommandList(ID3D12Device14* device, ID3D12CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type, bool closed = true);
+	wrl::ComPtr<ID3D12GraphicsCommandList> CreateDirectGraphicsCommandList(ID3D12Device14* device, ID3D12CommandAllocator* allocator, bool closed = true);
+	wrl::ComPtr<ID3D12Fence> CreateFence(ID3D12Device14* device, UINT64 value, D3D12_FENCE_FLAGS flags = D3D12_FENCE_FLAG_NONE);
 }

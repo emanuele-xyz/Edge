@@ -2,7 +2,6 @@
 #include <Edge\Gfx.h>
 #include <Edge\Utils.h>
 #include <Edge\DX12.h>
-#include <Edge\Utils.h>
 #include <Edge\Registry.h>
 #include <Edge\Logger.h>
 
@@ -18,6 +17,7 @@ namespace Edge
 		Impl& operator=(const Impl&) = delete;
 		Impl& operator=(Impl&&) noexcept = delete;
 	private:
+		// TODO: pass frame count as input
 		constexpr static UINT FRAME_COUNT{ 2 };
 		#if defined(_DEBUG)
 		// Note: Must be the first member, because we want it to be destructed last.
@@ -30,20 +30,30 @@ namespace Edge
 		wrl::ComPtr<IDXGIAdapter4> m_adapter;
 		DXGI_ADAPTER_DESC3 m_adapter_desc{};
 		wrl::ComPtr<ID3D12Device14> m_device;
-		wrl::ComPtr<ID3D12CommandQueue> m_direct_queue;
+		wrl::ComPtr<ID3D12CommandQueue> m_direct_command_queue;
 		wrl::ComPtr<IDXGISwapChain4> m_swap_chain;
 		DX12::DescriptorHeap m_rtv_heap_frame;
 		wrl::ComPtr<ID3D12Resource> m_rtv_frame[FRAME_COUNT];
+		wrl::ComPtr<ID3D12CommandAllocator> m_direct_command_allocator;
+		wrl::ComPtr<ID3D12GraphicsCommandList> m_direct_command_list;
+		UINT64 m_fence_value;
+		wrl::ComPtr<ID3D12Fence> m_fence;
+		Win32::Event m_fence_event;
 	};
 
 	Gfx::Impl::Impl(void* hwnd)
 		: m_dxgi_factory{ DX12::CreateDXGIFactory() }
 		, m_adapter{ DX12::GetDXGIAdapter(m_dxgi_factory.Get()) }
 		, m_device{ DX12::CreateD3D12Device(m_adapter.Get()) }
-		, m_direct_queue{ DX12::CreateD3D12DirectQueue(m_device.Get()) }
-		, m_swap_chain{ DX12::CreateDXGISwapChain(m_dxgi_factory.Get(), m_direct_queue.Get(), static_cast<HWND>(hwnd), FRAME_COUNT) }
+		, m_direct_command_queue{ DX12::CreateD3D12DirectQueue(m_device.Get()) }
+		, m_swap_chain{ DX12::CreateDXGISwapChain(m_dxgi_factory.Get(), m_direct_command_queue.Get(), static_cast<HWND>(hwnd), FRAME_COUNT) }
 		, m_rtv_heap_frame{ m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FRAME_COUNT, FALSE }
 		, m_rtv_frame{}
+		, m_direct_command_allocator{ DX12::CreateDirectCommandAllocator(m_device.Get()) }
+		, m_direct_command_list{ DX12::CreateDirectGraphicsCommandList(m_device.Get(), m_direct_command_allocator.Get()) }
+		, m_fence_value{}
+		, m_fence{ DX12::CreateFence(m_device.Get(), m_fence_value++) }
+		, m_fence_event{ FALSE, FALSE }
 	{
 		// Fetch and log adapter description
 		HRESULT hr{ S_OK };
@@ -60,8 +70,6 @@ namespace Edge
 			wrl::ComPtr<ID3D12Resource> buf{ DX12::GetSwapChainBuffer(m_swap_chain.Get(), i) };
 			m_device->CreateRenderTargetView(buf.Get(), nullptr, m_rtv_heap_frame.At(i));
 		}
-
-		// TODO: to be implemented
 	}
 
 	Gfx::Gfx(void* hwnd)

@@ -18,7 +18,21 @@ namespace wrl = Microsoft::WRL;
 
 namespace Edge::Win32
 {
+	// TODO: we can do better than this bullshit
 	void WarnIfNotSuccess(HRESULT hr, const std::string_view msg);
+
+	class Event
+	{
+	public:
+		Event(BOOL manual_reset, BOOL initial_state, SECURITY_ATTRIBUTES* security_attributes = NULL, const char* name = NULL);
+		~Event();
+		Event(const Event&) = delete;
+		Event(Event&&) noexcept = delete;
+		Event& operator=(const Event&) = delete;
+		Event& operator=(Event&&) noexcept = delete;
+	private:
+		HANDLE m_event;
+	};
 
 	class WindowClass
 	{

@@ -14,6 +14,17 @@ namespace Edge::Win32
         }
     }
 
+    Event::Event(BOOL manual_reset, BOOL initial_state, SECURITY_ATTRIBUTES* security_attributes, const char* name)
+        : m_event{ NULL }
+    {
+        m_event = CreateEventA(security_attributes, manual_reset, initial_state, name);
+        Edge_AssertMsg(m_event, "Failed to create Win32 Event");
+    }
+    Event::~Event()
+    {
+       CloseHandle(m_event);
+    }
+
 	WindowClass::WindowClass(std::string_view name, WNDPROC window_procedure)
 		: m_name{name}
 	{

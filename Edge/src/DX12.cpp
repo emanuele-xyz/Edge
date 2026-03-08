@@ -47,6 +47,36 @@ namespace Edge::DX12
 		}
 		return str;
 	}
+	static const char* D3D12GetCommandListTypeStr(D3D12_COMMAND_LIST_TYPE type)
+	{
+		const char* str{};
+		switch (type)
+		{
+		case D3D12_COMMAND_LIST_TYPE_DIRECT: { str = "D3D12_COMMAND_LIST_TYPE_DIRECT"; } break;
+		case D3D12_COMMAND_LIST_TYPE_BUNDLE: { str = "D3D12_COMMAND_LIST_TYPE_BUNDLE"; } break;
+		case D3D12_COMMAND_LIST_TYPE_COMPUTE: { str = "D3D12_COMMAND_LIST_TYPE_COMPUTE"; } break;
+		case D3D12_COMMAND_LIST_TYPE_COPY: { str = "D3D12_COMMAND_LIST_TYPE_COPY"; } break;
+		case D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE: { str = "D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE"; } break;
+		case D3D12_COMMAND_LIST_TYPE_VIDEO_PROCESS: { str = "D3D12_COMMAND_LIST_TYPE_VIDEO_PROCESS"; } break;
+		case D3D12_COMMAND_LIST_TYPE_VIDEO_ENCODE: { str = "D3D12_COMMAND_LIST_TYPE_VIDEO_ENCODE"; } break;
+		case D3D12_COMMAND_LIST_TYPE_NONE: { str = "D3D12_COMMAND_LIST_TYPE_NONE"; } break;
+		default: { Edge_Unreachable(); } break;
+		}
+		return str;
+	}
+	static const char* D3D12GetFenceFlagsStr(D3D12_FENCE_FLAGS flags)
+	{
+		const char* str{};
+		switch (flags)
+		{
+		case D3D12_FENCE_FLAG_NONE: { str = "D3D12_FENCE_FLAG_NONE"; } break;
+		case D3D12_FENCE_FLAG_SHARED: { str = "D3D12_FENCE_FLAG_SHARED"; } break;
+		case D3D12_FENCE_FLAG_SHARED_CROSS_ADAPTER: { str = "D3D12_FENCE_FLAG_SHARED_CROSS_ADAPTER"; } break;
+		case D3D12_FENCE_FLAG_NON_MONITORED: { str = "D3D12_FENCE_FLAG_NON_MONITORED"; } break;
+		default: { Edge_Unreachable(); } break;
+		}
+		return str;
+	}
 
 	DescriptorHeap::DescriptorHeap(ID3D12Device14* device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT size, BOOL shader_visible)
 		: m_heap{ CreateDescriptorHeap(device, type, size, shader_visible) }
@@ -198,7 +228,7 @@ namespace Edge::DX12
 		//UINT desc.NodeMask = ;
 		wrl::ComPtr<ID3D12DescriptorHeap> heap{};
 		HRESULT hr{ device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(heap.ReleaseAndGetAddressOf())) };
-		EdgeWin32_AssertHRMsgFmt(hr, "Failed to create descriptor heap - type: {} - size: {} - is_shader_visible: {}", D3D12DescriptorTypeToStr(type), size, shader_visible);
+		EdgeWin32_AssertHRMsgFmt(hr, "Failed to create D3D12 descriptor heap - type: {} - size: {} - is_shader_visible: {}", D3D12DescriptorTypeToStr(type), size, shader_visible);
 		return heap;
 	}
 	wrl::ComPtr<ID3D12DescriptorHeap> CreateRTVHeap(ID3D12Device14* device, UINT size, BOOL shader_visible)
@@ -209,7 +239,40 @@ namespace Edge::DX12
 	{
 		wrl::ComPtr<ID3D12Resource> res;
 		HRESULT hr{ swap_chain->GetBuffer(buffer_idx, IID_PPV_ARGS(res.ReleaseAndGetAddressOf())) };
-		EdgeWin32_AssertHRMsgFmt(hr, "Failed to get swap chain buffer {}", buffer_idx);
+		EdgeWin32_AssertHRMsgFmt(hr, "Failed to get DXGI swap chain buffer {}", buffer_idx);
 		return res;
+	}
+	wrl::ComPtr<ID3D12CommandAllocator> CreateCommandAllocator(ID3D12Device14* device, D3D12_COMMAND_LIST_TYPE type)
+	{
+		wrl::ComPtr<ID3D12CommandAllocator> allocator{};
+		HRESULT hr{ device->CreateCommandAllocator(type, IID_PPV_ARGS(allocator.ReleaseAndGetAddressOf())) };
+		EdgeWin32_AssertHRMsgFmt(hr, "Failed to create D3D12 command allocator - type: {}", D3D12GetCommandListTypeStr(type));
+		return allocator;
+	}
+	wrl::ComPtr<ID3D12CommandAllocator> CreateDirectCommandAllocator(ID3D12Device14* device)
+	{
+		return CreateCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+	}
+	wrl::ComPtr<ID3D12GraphicsCommandList> CreateGraphicsCommandList(ID3D12Device14* device, ID3D12CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type, bool closed)
+	{
+		wrl::ComPtr<ID3D12GraphicsCommandList> list{};
+		HRESULT hr{ device->CreateCommandList(0, type, allocator, nullptr, IID_PPV_ARGS(list.ReleaseAndGetAddressOf())) };
+		EdgeWin32_AssertHRMsgFmt(hr, "Failed to create D3D12 command list - allocator: {} - type: {}", static_cast<void*>(allocator), D3D12GetCommandListTypeStr(type));
+		if (closed)
+		{
+			list->Close();
+		}
+		return list;
+	}
+	wrl::ComPtr<ID3D12GraphicsCommandList> CreateDirectGraphicsCommandList(ID3D12Device14* device, ID3D12CommandAllocator* allocator, bool closed)
+	{
+		return CreateGraphicsCommandList(device, allocator, D3D12_COMMAND_LIST_TYPE_DIRECT, closed);
+	}
+	wrl::ComPtr<ID3D12Fence> CreateFence(ID3D12Device14* device, UINT64 value, D3D12_FENCE_FLAGS flags)
+	{
+		wrl::ComPtr<ID3D12Fence> fence{};
+		HRESULT hr{ device->CreateFence(value, flags, IID_PPV_ARGS(fence.ReleaseAndGetAddressOf())) };
+		EdgeWin32_AssertHRMsgFmt(hr, "Failed to create D3D12 fence - initial value: {} - flags: {}", value, D3D12GetFenceFlagsStr(flags));
+		return fence;
 	}
 }
