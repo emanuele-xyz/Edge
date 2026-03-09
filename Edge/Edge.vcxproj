@@ -118,7 +118,12 @@
   <ItemGroup>
     <ClInclude Include="include\Edge\Crashes.h" />
     <ClInclude Include="include\Edge\DX12.h" />
+    <ClInclude Include="include\Edge\Gfx\CommandList.h" />
+    <ClInclude Include="include\Edge\Gfx\CommandListType.h" />
+    <ClInclude Include="include\Edge\Gfx\Device.h" />
     <ClInclude Include="include\Edge\Gfx.h" />
+    <ClInclude Include="include\Edge\Gfx\RenderTarget.h" />
+    <ClInclude Include="include\Edge\Math.h" />
     <ClInclude Include="include\Edge\Registry.h" />
     <ClInclude Include="include\Edge\Utils.h" />
     <ClInclude Include="include\Edge\Win32.h" />

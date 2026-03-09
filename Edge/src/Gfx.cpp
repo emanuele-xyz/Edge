@@ -5,9 +5,9 @@
 #include <Edge\Registry.h>
 #include <Edge\Logger.h>
 
-namespace Edge
+namespace Edge::Gfx
 {
-	class Gfx::Impl
+	class Device::Impl
 	{
 	public:
 		Impl(void* hwnd);
@@ -28,7 +28,7 @@ namespace Edge
 		#endif
 		wrl::ComPtr<IDXGIFactory7> m_dxgi_factory;
 		wrl::ComPtr<IDXGIAdapter4> m_adapter;
-		DXGI_ADAPTER_DESC3 m_adapter_desc{};
+		DXGI_ADAPTER_DESC3 m_adapter_desc;
 		wrl::ComPtr<ID3D12Device14> m_device;
 		wrl::ComPtr<ID3D12CommandQueue> m_direct_command_queue;
 		wrl::ComPtr<IDXGISwapChain4> m_swap_chain;
@@ -41,9 +41,10 @@ namespace Edge
 		Win32::Event m_fence_event;
 	};
 
-	Gfx::Impl::Impl(void* hwnd)
+	Device::Impl::Impl(void* hwnd)
 		: m_dxgi_factory{ DX12::CreateDXGIFactory() }
 		, m_adapter{ DX12::GetDXGIAdapter(m_dxgi_factory.Get()) }
+		, m_adapter_desc{}
 		, m_device{ DX12::CreateD3D12Device(m_adapter.Get()) }
 		, m_direct_command_queue{ DX12::CreateD3D12DirectQueue(m_device.Get()) }
 		, m_swap_chain{ DX12::CreateDXGISwapChain(m_dxgi_factory.Get(), m_direct_command_queue.Get(), static_cast<HWND>(hwnd), FRAME_COUNT) }
@@ -72,11 +73,11 @@ namespace Edge
 		}
 	}
 
-	Gfx::Gfx(void* hwnd)
+	Device::Device(void* hwnd)
 		: m_impl{ std::make_unique<Impl>(hwnd) }
 	{
 	}
-	Gfx::~Gfx()
+	Device::~Device()
 	{
 		// do nothing (needed for PIMPL)
 	}

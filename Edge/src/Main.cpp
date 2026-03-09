@@ -11,11 +11,20 @@ namespace Edge
 	static void Entry()
 	{
 		Window window{ "Edge", 1280, 720 }; // TODO: hardcoded window dimensions and title
-		Gfx gfx{ window.Handle() };
+		Gfx::Device gfx_device{ window.Handle() };
 
 		while (!window.ShouldClose())
 		{
 			window.Update();
+
+			// render
+			{
+				Gfx::CommandList cmd_list{ gfx_device.GetCommandList(Gfx::CommandListType::Main) };
+			}
+
+			// present
+			gfx_device.Present(false);
+
 		}
 	}
 }

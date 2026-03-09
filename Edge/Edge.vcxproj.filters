@@ -59,13 +59,28 @@
     <ClInclude Include="include\Edge\DX12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Edge\Gfx.h">
+    <ClInclude Include="include\Edge\Gfx\Device.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Edge\Registry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Edge\Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Edge\Gfx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Edge\Gfx\CommandList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Edge\Gfx\CommandListType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Edge\Gfx\RenderTarget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Edge\Math.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
