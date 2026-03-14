@@ -59,7 +59,7 @@
     <ClInclude Include="include\Edge\DX12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Edge\Gfx\Device.h">
+    <ClInclude Include="include\Edge\Gfx\Handle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Edge\Registry.h">

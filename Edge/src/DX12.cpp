@@ -78,6 +78,34 @@ namespace Edge::DX12
 		return str;
 	}
 
+	void ResourceStateTracker::TrackResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES state)
+	{
+		bool is_not_tracked{ m_resource_state_table.contains(resource) };
+		Edge_AssertMsgFmt(!is_not_tracked, "Trying to track a D3D12 Resource that is already being tracked - resource: {}", static_cast<void*>(resource));
+		m_resource_state_table.emplace(resource, state);
+	}
+	void ResourceStateTracker::UntrackResource(ID3D12Resource* resource)
+	{
+		auto it{ m_resource_state_table.find(resource) };
+		bool is_tracked{ it != m_resource_state_table.end() };
+		Edge_AssertMsgFmt(is_tracked, "Trying to untrack a D3D12 Resource that is not being tracked - resource: {}", static_cast<void*>(resource));
+		m_resource_state_table.erase(resource);
+	}
+	void ResourceStateTracker::TransitionResource(ID3D12GraphicsCommandList* command_list, ID3D12Resource* resource, D3D12_RESOURCE_STATES new_state)
+	{
+		auto it{ m_resource_state_table.find(resource) };
+		bool is_tracked{ it != m_resource_state_table.end() };
+		Edge_AssertMsgFmt(is_tracked, "Trying to transition a D3D12 Resource that is not being tracked - resource: {}", static_cast<void*>(resource));
+		ResourceStateInfo state_info{ it->second };
+		if (state_info.current_state != new_state)
+		{
+			state_info.Set(new_state);
+			D3D12_RESOURCE_BARRIER barrier{ CD3DX12_RESOURCE_BARRIER::Transition(resource, state_info.previous_state, state_info.current_state) };
+			command_list->ResourceBarrier(1, &barrier);
+			it->second = state_info;
+		}
+	}
+
 	DescriptorHeap::DescriptorHeap(ID3D12Device14* device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT size, BOOL shader_visible)
 		: m_heap{ CreateDescriptorHeap(device, type, size, shader_visible) }
 		, m_descriptor_size{ device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) }

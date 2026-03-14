@@ -2,5 +2,5 @@
 
 #include <Edge/Gfx/CommandList.h>
 #include <Edge/Gfx/CommandListType.h>
-#include <Edge/Gfx/Device.h>
+#include <Edge/Gfx/Handle.h>
 #include <Edge/Gfx/RenderTarget.h>

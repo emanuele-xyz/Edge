@@ -1,4 +1,5 @@
 #include <Edge\PCH.h>
+#include <Edge\Math.h>
 #include <Edge\Registry.h>
 #include <Edge\Win32.h>
 #include <Edge\Crashes.h>
@@ -11,7 +12,10 @@ namespace Edge
 	static void Entry()
 	{
 		Window window{ "Edge", 1280, 720 }; // TODO: hardcoded window dimensions and title
-		Gfx::Device gfx_device{ window.Handle() };
+		Gfx::Handle gfx{ window.Handle() };
+
+		v2 pos{};
+		pos.x();
 
 		while (!window.ShouldClose())
 		{
@@ -19,11 +23,14 @@ namespace Edge
 
 			// render
 			{
-				Gfx::CommandList cmd_list{ gfx_device.GetCommandList(Gfx::CommandListType::Main) };
+				Gfx::CommandList cmd_list{ gfx.GetCommandList(Gfx::CommandListType::Main) };
+				Gfx::RenderTarget render_target{ gfx.GetCurrentSwapChainBufferRenderTarget() };
+				cmd_list.ClearRenderTarget(render_target, v4{ 1.0f, 1.0f, 0.0, 1.0f });
+				gfx.SubmitCommandList(cmd_list);
 			}
 
 			// present
-			gfx_device.Present(false);
+			gfx.Present(false);
 
 		}
 	}

@@ -120,7 +120,7 @@
     <ClInclude Include="include\Edge\DX12.h" />
     <ClInclude Include="include\Edge\Gfx\CommandList.h" />
     <ClInclude Include="include\Edge\Gfx\CommandListType.h" />
-    <ClInclude Include="include\Edge\Gfx\Device.h" />
+    <ClInclude Include="include\Edge\Gfx\Handle.h" />
     <ClInclude Include="include\Edge\Gfx.h" />
     <ClInclude Include="include\Edge\Gfx\RenderTarget.h" />
     <ClInclude Include="include\Edge\Math.h" />

@@ -11,8 +11,40 @@
 
 #include <d3dx12.h>
 
+#include <unordered_map>
+
 namespace Edge::DX12
 {
+	class ResourceStateTracker
+	{
+	public:
+		ResourceStateTracker() : m_resource_state_table{} {}
+		~ResourceStateTracker() = default;
+		ResourceStateTracker(const ResourceStateTracker&) = delete;
+		ResourceStateTracker(ResourceStateTracker&&) noexcept = delete;
+		ResourceStateTracker& operator=(const ResourceStateTracker&) = delete;
+		ResourceStateTracker& operator=(ResourceStateTracker&&) noexcept = delete;
+	public:
+		void TrackResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES state);
+		void UntrackResource(ID3D12Resource* resource);
+		void TransitionResource(ID3D12GraphicsCommandList* command_list, ID3D12Resource* resource, D3D12_RESOURCE_STATES new_state);
+	private:
+		struct ResourceStateInfo
+		{
+		public:
+			ResourceStateInfo(D3D12_RESOURCE_STATES prev_state, D3D12_RESOURCE_STATES curr_state) : previous_state{ prev_state }, current_state{ curr_state } {}
+			ResourceStateInfo(D3D12_RESOURCE_STATES state) : ResourceStateInfo{ state, state } {}
+			ResourceStateInfo() : ResourceStateInfo{ D3D12_RESOURCE_STATE_COMMON } {};
+		public:
+			void Set(D3D12_RESOURCE_STATES new_state) { previous_state = current_state; current_state = new_state; }
+		public:
+			D3D12_RESOURCE_STATES previous_state;
+			D3D12_RESOURCE_STATES current_state;
+		};
+	private:
+		std::unordered_map<ID3D12Resource*, ResourceStateInfo> m_resource_state_table;
+	};
+
 	class DescriptorHeap
 	{
 	public:

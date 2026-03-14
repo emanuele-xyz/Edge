@@ -7,7 +7,7 @@
 
 namespace Edge::Gfx
 {
-	class Device::Impl
+	class Handle::Impl
 	{
 	public:
 		Impl(void* hwnd);
@@ -32,24 +32,25 @@ namespace Edge::Gfx
 		wrl::ComPtr<ID3D12Device14> m_device;
 		wrl::ComPtr<ID3D12CommandQueue> m_direct_command_queue;
 		wrl::ComPtr<IDXGISwapChain4> m_swap_chain;
+		DX12::ResourceStateTracker m_resource_state_tracker;
 		DX12::DescriptorHeap m_rtv_heap_frame;
-		wrl::ComPtr<ID3D12Resource> m_rtv_frame[FRAME_COUNT];
+		wrl::ComPtr<ID3D12Resource> m_swap_chain_buffer[FRAME_COUNT];
 		wrl::ComPtr<ID3D12CommandAllocator> m_direct_command_allocator;
 		wrl::ComPtr<ID3D12GraphicsCommandList> m_direct_command_list;
 		UINT64 m_fence_value;
 		wrl::ComPtr<ID3D12Fence> m_fence;
 		Win32::Event m_fence_event;
 	};
-
-	Device::Impl::Impl(void* hwnd)
+	Handle::Impl::Impl(void* hwnd)
 		: m_dxgi_factory{ DX12::CreateDXGIFactory() }
 		, m_adapter{ DX12::GetDXGIAdapter(m_dxgi_factory.Get()) }
 		, m_adapter_desc{}
 		, m_device{ DX12::CreateD3D12Device(m_adapter.Get()) }
 		, m_direct_command_queue{ DX12::CreateD3D12DirectQueue(m_device.Get()) }
 		, m_swap_chain{ DX12::CreateDXGISwapChain(m_dxgi_factory.Get(), m_direct_command_queue.Get(), static_cast<HWND>(hwnd), FRAME_COUNT) }
+		, m_resource_state_tracker{}
 		, m_rtv_heap_frame{ m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FRAME_COUNT, FALSE }
-		, m_rtv_frame{}
+		, m_swap_chain_buffer{}
 		, m_direct_command_allocator{ DX12::CreateDirectCommandAllocator(m_device.Get()) }
 		, m_direct_command_list{ DX12::CreateDirectGraphicsCommandList(m_device.Get(), m_direct_command_allocator.Get()) }
 		, m_fence_value{}
@@ -65,20 +66,51 @@ namespace Edge::Gfx
 			Registry::Get<Logger>()->Info("Selected DXGI adapter: {}", WCharToString(m_adapter_desc.Description));
 		}
 
-		// Create frame RTVs
+		// Fetch swap chain buffers and start tracking their resource states
 		for (UINT i{}; i < FRAME_COUNT; i++)
 		{
 			wrl::ComPtr<ID3D12Resource> buf{ DX12::GetSwapChainBuffer(m_swap_chain.Get(), i) };
-			m_device->CreateRenderTargetView(buf.Get(), nullptr, m_rtv_heap_frame.At(i));
+			m_swap_chain_buffer[i] = buf;
+			m_resource_state_tracker.TrackResource(buf.Get(), D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON);
+		}
+
+		// Create swap chain buffers RTVs
+		for (UINT i{}; i < FRAME_COUNT; i++)
+		{
+			ID3D12Resource* buf{ m_swap_chain_buffer[i].Get() };
+			m_device->CreateRenderTargetView(buf, nullptr, m_rtv_heap_frame.At(i));
 		}
 	}
 
-	Device::Device(void* hwnd)
+	void CommandList::ClearRenderTarget(RenderTarget /*render_target*/, v4 /*color*/)
+	{
+		// TODO: to be implemented
+	}
+
+	Handle::Handle(void* hwnd)
 		: m_impl{ std::make_unique<Impl>(hwnd) }
 	{
 	}
-	Device::~Device()
+	Handle::~Handle()
 	{
 		// do nothing (needed for PIMPL)
+	}
+	CommandList Handle::GetCommandList(CommandListType type)
+	{
+		// TODO: to be implemented
+		return CommandList{ type };
+	}
+	void Handle::SubmitCommandList(CommandList /*list*/)
+	{
+		// TODO: to be implemented
+	}
+	RenderTarget Handle::GetCurrentSwapChainBufferRenderTarget()
+	{
+		// TODO: to be implemented
+		return RenderTarget{};
+	}
+	void Handle::Present(bool /*vsync*/)
+	{
+		// TODO: to be implemented
 	}
 }
