@@ -82,9 +82,21 @@ namespace Edge::Gfx
 		}
 	}
 
-	void CommandList::ClearRenderTarget(RenderTarget /*render_target*/, v4 /*color*/)
+	void CommandList::ClearRenderTarget(RenderTarget render_target, v4 color)
 	{
+		switch (m_type)
+		{
+		case Edge::Gfx::CommandListType::Main: {  } break;
+		case Edge::Gfx::CommandListType::Copy: {  } break;
+		case Edge::Gfx::CommandListType::Compute: {  } break;
+		default: { Edge_Unreachable(); } break;
+		}
+
+		ID3D12CommandList* cmd_list;
+		cmd_list->Co
+
 		// TODO: to be implemented
+
 	}
 
 	Handle::Handle(void* hwnd)

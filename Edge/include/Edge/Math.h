@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <utility>
 
 template <std::size_t N>
 class v
@@ -13,11 +14,11 @@ public:
 		requires (sizeof...(Args) == N) && (std::convertible_to<Args, float> && ...)
 	constexpr v(Args... args) noexcept : m_elems{ static_cast<float>(args)... } {}
 public:
-	constexpr const float& operator[](std::size_t i) const noexcept { return m_elems[i]; }
-	constexpr float& operator[](std::size_t i) noexcept { return m_elems[i]; }
+	template <typename Self>
+	constexpr decltype(auto) operator[](this Self&& self, std::size_t i) noexcept { return std::forward_like<Self>(self.m_elems[i]); }
 public:
-	constexpr const float* Elems() const noexcept { return m_elems; }
-	constexpr float* Elems() noexcept { return m_elems; }
+	template <typename Self>
+	constexpr auto Elems(this Self&& self) noexcept { return self.m_elems; }
 private:
 	float m_elems[N];
 };
